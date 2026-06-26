@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#1D9E75">
+<meta name="description" content="Seu app de lembretes pessoal">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Lembrai">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="icon" href="icon-192.png">
+<title>Lembrai</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+:root{
+  --green:#1D9E75;--green-dark:#0F6E56;--green-light:#E1F5EE;--green-border:#5DCAA5;
+  --blue-light:#E6F1FB;--blue:#185FA5;--blue-border:#85B7EB;
+  --purple-light:#EEEDFE;--purple:#3C3489;--purple-border:#AFA9EC;
+  --coral-light:#FAECE7;--coral:#993C1D;
+  --bg:#f5f5f3;--surface:#fff;--border:rgba(0,0,0,0.12);--border-md:rgba(0,0,0,0.25);
+  --text:#1a1a1a;--text2:#666;--radius:12px;--radius-sm:8px;
+}
+body{font-family:system-ui,-apple-system,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;max-width:480px;margin:0 auto}
+.header{background:var(--surface);border-bottom:.5px solid var(--border);padding:16px 20px;position:sticky;top:0;z-index:10}
+.header-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.app-title{font-size:20px;font-weight:500}
+.notif-btn{background:none;border:.5px solid var(--border-md);border-radius:var(--radius-sm);padding:6px 10px;cursor:pointer;font-size:13px;color:var(--text2);display:flex;align-items:center;gap:6px;font-family:inherit}
+.tabs{display:flex;gap:6px}
+.tab{padding:6px 14px;border-radius:20px;font-size:13px;cursor:pointer;border:none;background:none;color:var(--text2);font-family:inherit}
+.tab.active{background:var(--surface);border:.5px solid var(--border-md);color:var(--text);font-weight:500}
+.section{padding:16px 16px 0}
+.section-label{font-size:12px;color:var(--text2);margin-bottom:8px;font-weight:500}
+.empty{text-align:center;padding:60px 20px;color:var(--text2);font-size:14px;line-height:1.6}
+.empty-icon{font-size:36px;margin-bottom:12px}
+.card{background:var(--surface);border:.5px solid var(--border);border-radius:var(--radius);padding:14px 16px;margin-bottom:8px;display:flex;align-items:flex-start;gap:12px;cursor:pointer;transition:border-color .15s;-webkit-user-select:none;user-select:none}
+.card:active{background:#fafafa}
+.card.done{opacity:.45}
+.card.done .item-title{text-decoration:line-through}
+.circle{width:22px;height:22px;border-radius:50%;border:1.5px solid var(--border-md);flex-shrink:0;margin-top:1px;display:flex;align-items:center;justify-content:center;transition:all .15s;font-size:13px}
+.circle.checked{background:var(--green);border-color:var(--green);color:#fff}
+.body{flex:1;min-width:0}
+.item-title{font-size:15px;font-weight:500;margin-bottom:4px}
+.item-meta{font-size:12px;color:var(--text2);display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.badge{display:inline-flex;align-items:center;gap:3px;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:500}
+.badge.tarefa{background:var(--green-light);color:var(--green-dark)}
+.badge.compromisso{background:var(--blue-light);color:var(--blue)}
+.badge.estudo{background:var(--purple-light);color:var(--purple)}
+.overdue{color:#D85A30!important}
+.item-desc{font-size:12px;color:var(--text2);margin-top:4px;line-height:1.4}
+.fab{position:fixed;bottom:28px;right:50%;transform:translateX(calc(50% + 196px));width:54px;height:54px;border-radius:50%;background:var(--green);color:#fff;border:none;cursor:pointer;font-size:26px;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 16px rgba(29,158,117,.4)}
+.fab:active{background:var(--green-dark);transform:translateX(calc(50% + 196px)) scale(.95)}
+.backdrop{position:fixed;inset:0;background:rgba(0,0,0,.4);display:flex;align-items:flex-end;justify-content:center;z-index:100;opacity:0;pointer-events:none;transition:opacity .2s}
+.backdrop.open{opacity:1;pointer-events:all}
+.modal{background:var(--surface);border-radius:20px 20px 0 0;padding:20px;width:100%;max-width:480px;transform:translateY(100%);transition:transform .25s cubic-bezier(.4,0,.2,1);padding-bottom:max(20px,env(safe-area-inset-bottom))}
+.backdrop.open .modal{transform:translateY(0)}
+.modal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px}
+.modal-title{font-size:17px;font-weight:500}
+.close-btn{background:none;border:none;cursor:pointer;font-size:24px;color:var(--text2);padding:4px;line-height:1}
+.field{margin-bottom:14px}
+.field label{display:block;font-size:13px;color:var(--text2);margin-bottom:5px}
+.field input,.field select,.field textarea{width:100%;border:.5px solid var(--border-md);border-radius:var(--radius-sm);padding:10px 12px;font-size:15px;font-family:inherit;background:var(--surface);color:var(--text);outline:none}
+.field input:focus,.field select:focus,.field textarea:focus{border-color:var(--green)}
+.field textarea{resize:none;height:68px}
+.type-row{display:flex;gap:8px}
+.type-btn{flex:1;padding:8px 4px;border-radius:var(--radius-sm);border:.5px solid var(--border);background:none;cursor:pointer;font-size:13px;font-family:inherit;color:var(--text2);transition:all .15s}
+.type-btn.active.tarefa{background:var(--green-light);border-color:var(--green-border);color:var(--green-dark);font-weight:500}
+.type-btn.active.compromisso{background:var(--blue-light);border-color:var(--blue-border);color:var(--blue);font-weight:500}
+.type-btn.active.estudo{background:var(--purple-light);border-color:var(--purple-border);color:var(--purple);font-weight:500}
+.row2{display:flex;gap:10px}
+.row2 .field{flex:1}
+.save-btn{width:100%;padding:14px;background:var(--green);color:#fff;border:none;border-radius:var(--radius);font-size:16px;font-weight:500;cursor:pointer;font-family:inherit;margin-top:4px}
+.save-btn:active{background:var(--green-dark)}
+.banner{padding:10px 14px;border-radius:var(--radius-sm);font-size:13px;display:flex;align-items:center;gap:8px;margin:12px 16px 0}
+.banner.ok{background:var(--green-light);border:.5px solid var(--green-border);color:var(--green-dark)}
+.banner.blocked{background:var(--coral-light);border:.5px solid #F0997B;color:var(--coral)}
+.pb{padding-bottom:80px}
+@media(prefers-color-scheme:dark){
+  :root{--bg:#1a1a1a;--surface:#252525;--border:rgba(255,255,255,0.1);--border-md:rgba(255,255,255,0.22);--text:#f0f0f0;--text2:#999}
+  .card:active{background:#2a2a2a}
+}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-top">
+    <span class="app-title">🔔 Lembrai</span>
+    <button class="notif-btn" onclick="requestNotif()" id="notif-btn">
+      <span id="notif-icon">🔕</span>
+      <span id="notif-label">Ativar alertas</span>
+    </button>
+  </div>
+  <div class="tabs">
+    <button class="tab active" onclick="setTab('hoje',this)">Hoje</button>
+    <button class="tab" onclick="setTab('proximos',this)">Próximos</button>
+    <button class="tab" onclick="setTab('todos',this)">Todos</button>
+  </div>
+</div>
+
+<div id="banner-area"></div>
+<div id="list" class="pb"></div>
+
+<button class="fab" onclick="openModal()" aria-label="Adicionar lembrete">＋</button>
+
+<div class="backdrop" id="backdrop" onclick="bgClick(event)">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title">Novo lembrete</span>
+      <button class="close-btn" onclick="closeModal()" aria-label="Fechar">×</button>
+    </div>
+    <div class="field">
+      <label>Tipo</label>
+      <div class="type-row">
+        <button class="type-btn tarefa active" onclick="setType('tarefa',this)">✓ Tarefa</button>
+        <button class="type-btn compromisso" onclick="setType('compromisso',this)">📅 Compromisso</button>
+        <button class="type-btn estudo" onclick="setType('estudo',this)">📖 Estudo</button>
+      </div>
+    </div>
+    <div class="field">
+      <label>Título *</label>
+      <input type="text" id="inp-title" placeholder="Ex: Revisar módulo 3 dos FIIs" maxlength="80">
+    </div>
+    <div class="field">
+      <label>Descrição (opcional)</label>
+      <textarea id="inp-desc" placeholder="Detalhes..."></textarea>
+    </div>
+    <div class="row2">
+      <div class="field">
+        <label>Data</label>
+        <input type="date" id="inp-date">
+      </div>
+      <div class="field">
+        <label>Horário</label>
+        <input type="time" id="inp-time">
+      </div>
+    </div>
+    <button class="save-btn" onclick="saveItem()">Salvar lembrete</button>
+  </div>
+</div>
+
+<script>
+let items = JSON.parse(localStorage.getItem('lembrai_v1') || '[]');
+let tab = 'hoje';
+let tipo = 'tarefa';
+
+const save = () => localStorage.setItem('lembrai_v1', JSON.stringify(items));
+const today = () => new Date().toISOString().slice(0,10);
+const tomorrow = () => { const d=new Date(); d.setDate(d.getDate()+1); return d.toISOString().slice(0,10); };
+
+function setTab(t, el) {
+  tab = t;
+  document.querySelectorAll('.tab').forEach(x => x.classList.remove('active'));
+  el.classList.add('active');
+  render();
+}
+
+function setType(t, el) {
+  tipo = t;
+  document.querySelectorAll('.type-btn').forEach(x => x.classList.remove('active'));
+  el.classList.add('active');
+}
+
+function openModal() {
+  document.getElementById('inp-date').value = today();
+  document.getElementById('inp-title').value = '';
+  document.getElementById('inp-desc').value = '';
+  document.getElementById('inp-time').value = '';
+  document.getElementById('backdrop').classList.add('open');
+  setTimeout(() => document.getElementById('inp-title').focus(), 300);
+}
+
+function closeModal() { document.getElementById('backdrop').classList.remove('open'); }
+function bgClick(e) { if (e.target === document.getElementById('backdrop')) closeModal(); }
+
+function saveItem() {
+  const title = document.getElementById('inp-title').value.trim();
+  if (!title) { document.getElementById('inp-title').focus(); return; }
+  const item = {
+    id: Date.now(),
+    title,
+    desc: document.getElementById('inp-desc').value.trim(),
+    date: document.getElementById('inp-date').value,
+    time: document.getElementById('inp-time').value,
+    type: tipo,
+    done: false,
+    created: Date.now()
+  };
+  items.unshift(item);
+  save();
+  scheduleNotif(item);
+  closeModal();
+  render();
+}
+
+function toggleDone(id) {
+  const it = items.find(i => i.id === id);
+  if (it) { it.done = !it.done; it.doneAt = it.done ? Date.now() : null; save(); render(); }
+}
+
+function isOverdue(item) {
+  if (item.done || !item.date) return false;
+  const td = today();
+  if (item.date < td) return true;
+  if (item.date === td && item.time) {
+    const now = new Date();
+    const [h,m] = item.time.split(':').map(Number);
+    return now.getHours() > h || (now.getHours() === h && now.getMinutes() > m);
+  }
+  return false;
+}
+
+function fmtDate(item) {
+  if (!item.date) return '';
+  const td = today(), tm = tomorrow();
+  let lbl = item.date === td ? 'Hoje' : item.date === tm ? 'Amanhã' : item.date.split('-').reverse().slice(0,2).join('/');
+  if (item.time) lbl += ' às ' + item.time;
+  return lbl;
+}
+
+const typeLabel = t => ({tarefa:'Tarefa',compromisso:'Compromisso',estudo:'Estudo'}[t]||t);
+
+function getFiltered() {
+  const td = today(), tm = tomorrow();
+  if (tab === 'hoje') return items.filter(i => i.date === td || (!i.date && !i.done));
+  if (tab === 'proximos') return items.filter(i => i.date && (i.date >= td) && !i.done);
+  return items;
+}
+
+function cardHtml(item) {
+  const ov = isOverdue(item);
+  const dt = fmtDate(item);
+  return `<div class="card${item.done?' done':''}" onclick="toggleDone(${item.id})">
+    <div class="circle${item.done?' checked':''}">${item.done?'✓':''}</div>
+    <div class="body">
+      <div class="item-title">${item.title}</div>
+      <div class="item-meta">
+        <span class="badge ${item.type}">${typeLabel(item.type)}</span>
+        ${dt ? `<span class="${ov?'overdue':''}">${dt}</span>` : ''}
+      </div>
+      ${item.desc ? `<div class="item-desc">${item.desc}</div>` : ''}
+    </div>
+  </div>`;
+}
+
+function render() {
+  const filtered = getFiltered();
+  const list = document.getElementById('list');
+  if (!filtered.length) {
+    list.innerHTML = `<div class="empty"><div class="empty-icon">🗒️</div>Nenhum lembrete aqui.<br>Toque em <strong>＋</strong> para adicionar.</div>`;
+    return;
+  }
+  const pending = filtered.filter(i => !i.done);
+  const done = filtered.filter(i => i.done);
+  let html = '';
+  if (pending.length) {
+    html += `<div class="section"><div class="section-label">Pendentes · ${pending.length}</div>${pending.map(cardHtml).join('')}</div>`;
+  }
+  if (done.length && tab === 'todos') {
+    html += `<div class="section" style="margin-top:16px"><div class="section-label">Concluídos · ${done.length}</div>${done.map(cardHtml).join('')}</div>`;
+  }
+  if (!pending.length && tab !== 'todos') {
+    html = `<div class="empty"><div class="empty-icon">✅</div>Tudo em dia!<br>Nenhum lembrete pendente.</div>`;
+  }
+  list.innerHTML = html;
+}
+
+// Notificações
+function scheduleNotif(item) {
+  if (Notification.permission !== 'granted' || !item.time || !item.date) return;
+  const d = new Date(item.date + 'T' + item.time + ':00');
+  const diff = d - Date.now();
+  if (diff > 0 && diff < 7 * 86400000) {
+    setTimeout(() => {
+      if (!items.find(i => i.id === item.id)?.done) {
+        new Notification('🔔 ' + item.title, { body: item.desc || typeLabel(item.type), icon: 'icon-192.png', badge: 'icon-192.png' });
+      }
+    }, diff);
+  }
+}
+
+async function requestNotif() {
+  if (!('Notification' in window)) { showBanner('Navegador não suporta notificações.', 'blocked'); return; }
+  const r = await Notification.requestPermission();
+  updateNotifBtn();
+  if (r === 'granted') {
+    showBanner('✅ Notificações ativadas! Você será avisado nos horários marcados.', 'ok');
+    items.forEach(i => { if (i.time && i.date && !i.done) scheduleNotif(i); });
+  } else {
+    showBanner('❌ Permissão negada. Ative nas configurações do navegador.', 'blocked');
+  }
+}
+
+function updateNotifBtn() {
+  const p = Notification.permission;
+  const lbl = document.getElementById('notif-label');
+  const ico = document.getElementById('notif-icon');
+  const btn = document.getElementById('notif-btn');
+  if (p === 'granted') { lbl.textContent = 'Alertas ativos'; ico.textContent = '🔔'; btn.style.color = 'var(--green-dark)'; btn.style.borderColor = 'var(--green-border)'; }
+  else if (p === 'denied') { lbl.textContent = 'Alertas bloqueados'; ico.textContent = '🔕'; btn.style.color = 'var(--coral)'; }
+}
+
+function showBanner(msg, type) {
+  document.getElementById('banner-area').innerHTML = `<div class="banner ${type}">${msg}</div>`;
+  setTimeout(() => document.getElementById('banner-area').innerHTML = '', 5000);
+}
+
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('sw.js').catch(e => console.log('SW:', e));
+}
+
+if ('Notification' in window) updateNotifBtn();
+render();
+</script>
+</body>
+</html>
